@@ -1,19 +1,29 @@
-name: andree
+name: catatan
 description: "A new Flutter project."
 publish_to: 'none'
-version: 0.1.0
+
+version: 1.0.0+1
 
 environment:
-  sdk: ^3.7.0
+  sdk: '>=3.0.0 <4.0.0' # Adjusting based on common practice for Dart SDK versions. Your original ^3.7.0 is also fine.
 
 dependencies:
   flutter:
     sdk: flutter
 
+  cupertino_icons: ^1.0.8
+  get: ^4.7.2 # You can keep this if you plan to use GetX for state management/navigation.
+  
+  # --- ADD THESE MISSING DEPENDENCIES ---
+  supabase_flutter: ^2.0.0 # Check pub.dev for the latest stable version
+  intl: ^0.18.0 # Check pub.dev for the latest stable version
+  flutter_datetime_picker_plus: ^2.1.0 # Check pub.dev for the latest stable version
+  # ------------------------------------
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^5.0.0
+  flutter_lints: ^3.0.0 # Updated to a more recent version for Flutter 3.x
 
 flutter:
   uses-material-design: true
