@@ -1,5 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../models/milk_record.dart'; // Pastikan path ini benar!
+import '../models/milk_record.dart'; 
 
 class SupabaseService {
   final SupabaseClient _supabase = Supabase.instance.client;
