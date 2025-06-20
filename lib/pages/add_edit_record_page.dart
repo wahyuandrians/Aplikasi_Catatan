@@ -1,82 +1,165 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import 'pages/home_page.dart';
+import 'package:intl/intl.dart';
+import 'package:flutter_datetime_picker_plus/flutter_datetime_picker_plus.dart'
+    as picker;
+import '../models/milk_record.dart';
+import '../services/supabase_service.dart';
 
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+class AddEditRecordPage extends StatefulWidget {
+  final MilkRecord? record;
 
-  await Supabase.initialize(
-    url: 'https://whsivugyawzzhpmcqebs.supabase.co',
-    anonKey:
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indoc2l2dWd5YXd6emhwbWNxZWJzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAwODYwMzksImV4cCI6MjA2NTY2MjAzOX0.G1epkcbV0r7KFIlV__jikOxIU6M_-yLJqyXnQ6B2kq4', // Ganti dengan Anon Key Supabase Anda
-  );
-  runApp(const MyApp());
+  const AddEditRecordPage({super.key, this.record});
+
+  @override
+  State<AddEditRecordPage> createState() => _AddEditRecordPageState();
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class _AddEditRecordPageState extends State<AddEditRecordPage> {
+  final _formKey = GlobalKey<FormState>();
+  final SupabaseService _supabaseService = SupabaseService();
+
+  late TextEditingController _farmerNameController;
+  late TextEditingController _milkQuantityController;
+  late DateTime _selectedDate;
+
+  bool get _isEditing => widget.record != null;
+
+  @override
+  void initState() {
+    super.initState();
+    _farmerNameController = TextEditingController(
+      text: _isEditing ? widget.record!.farmerName : '',
+    );
+    _milkQuantityController = TextEditingController(
+      text: _isEditing ? widget.record!.milkQuantity.toString() : '',
+    );
+    _selectedDate = _isEditing ? widget.record!.setorDate : DateTime.now();
+  }
+
+  @override
+  void dispose() {
+    _farmerNameController.dispose();
+    _milkQuantityController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submitForm() async {
+    if (_formKey.currentState!.validate()) {
+      _formKey.currentState!.save();
+
+      final String farmerName = _farmerNameController.text;
+      final double milkQuantity = double.parse(_milkQuantityController.text);
+
+      if (_isEditing) {
+        final updatedRecord = MilkRecord(
+          id: widget.record!.id,
+          setorDate: _selectedDate,
+          farmerName: farmerName,
+          milkQuantity: milkQuantity,
+          createdAt: widget.record!.createdAt,
+        );
+        await _supabaseService.updateMilkRecord(updatedRecord);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Catatan berhasil diperbarui!')),
+        );
+      } else {
+        final newRecord = MilkRecord(
+          id: '',
+          setorDate: _selectedDate,
+          farmerName: farmerName,
+          milkQuantity: milkQuantity,
+        );
+        await _supabaseService.addMilkRecord(newRecord);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Catatan berhasil ditambahkan!')),
+        );
+      }
+      Navigator.pop(context);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Aplikasi Setoran Susu',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-        primaryColor: const Color(0xFF3B82F6),
-        secondaryHeaderColor: const Color(0xFF60A5FA),
-        scaffoldBackgroundColor: const Color(0xFFF8FAFC),
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Color(0xFF3B82F6),
-          foregroundColor: Colors.white,
-          elevation: 0,
-        ),
-        floatingActionButtonTheme: const FloatingActionButtonThemeData(
-          backgroundColor: Color(0xFF3B82F6),
-          foregroundColor: Colors.white,
-        ),
-        cardTheme: CardTheme(
-          color: Colors.white,
-          elevation: 2,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8.0),
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(_isEditing ? 'Edit Catatan Susu' : 'Tambah Catatan Susu'),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Form(
+          key: _formKey,
+          child: ListView(
+            children: [
+              TextFormField(
+                controller: _farmerNameController,
+                decoration: const InputDecoration(
+                  labelText: 'Nama Peternak',
+                  hintText: 'Masukkan nama peternak',
+                  prefixIcon: Icon(Icons.person),
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Nama peternak tidak boleh kosong';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _milkQuantityController,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                  labelText: 'Jumlah Susu (liter)',
+                  hintText: 'Masukkan jumlah susu',
+                  prefixIcon: Icon(Icons.liquor),
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Jumlah susu tidak boleh kosong';
+                  }
+                  if (double.tryParse(value) == null) {
+                    return 'Masukkan angka yang valid';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
+              GestureDetector(
+                onTap: () {
+                  picker.DatePicker.showDatePicker(
+                    context,
+                    showTitleActions: true,
+                    minTime: DateTime(2020, 1, 1),
+                    maxTime: DateTime.now().add(const Duration(days: 365)),
+                    onConfirm: (date) {
+                      setState(() {
+                        _selectedDate = date;
+                      });
+                    },
+                    currentTime: _selectedDate,
+                    locale: picker.LocaleType.id,
+                  );
+                },
+                child: InputDecorator(
+                  decoration: const InputDecoration(
+                    labelText: 'Tanggal Setor',
+                    suffixIcon: Icon(Icons.calendar_today),
+                  ),
+                  child: Text(
+                    DateFormat('dd MMMM yyyy').format(_selectedDate),
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 32),
+              ElevatedButton(
+                onPressed: _submitForm,
+                child: Text(_isEditing ? 'Simpan Perubahan' : 'Tambah Catatan'),
+              ),
+            ],
           ),
-        ),
-        inputDecorationTheme: InputDecorationTheme(
-          filled: true,
-          fillColor: Colors.white,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8.0),
-            borderSide: BorderSide.none,
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8.0),
-            borderSide: const BorderSide(color: Color(0xFF3B82F6), width: 2.0),
-          ),
-          contentPadding: const EdgeInsets.symmetric(
-            vertical: 12.0,
-            horizontal: 16.0,
-          ),
-        ),
-        elevatedButtonTheme: ElevatedButtonThemeData(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF3B82F6),
-            foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(
-              vertical: 12.0,
-              horizontal: 24.0,
-            ),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8.0),
-            ),
-            elevation: 0,
-          ),
-        ),
-        textButtonTheme: TextButtonThemeData(
-          style: TextButton.styleFrom(foregroundColor: const Color(0xFF3B82F6)),
         ),
       ),
-      home: const HomePage(),
-      debugShowCheckedModeBanner: false,
     );
   }
 }
