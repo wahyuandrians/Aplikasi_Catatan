@@ -1,5 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../models/milk_record.dart';
+import '../models/milk_record.dart'; // Pastikan path ini benar!
 
 class SupabaseService {
   final SupabaseClient _supabase = Supabase.instance.client;
@@ -55,9 +55,7 @@ class SupabaseService {
   }
 
   Future<double> getTotalMilkPerWeek(
-    DateTime startDate,
-    DateTime endDate,
-  ) async {
+      DateTime startDate, DateTime endDate) async {
     try {
       final response = await _supabase
           .from('milk_records')
