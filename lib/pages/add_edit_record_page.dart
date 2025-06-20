@@ -111,7 +111,6 @@ class _AddEditRecordPageState extends State<AddEditRecordPage> {
                 decoration: const InputDecoration(
                   labelText: 'Jumlah Susu (liter)',
                   hintText: 'Masukkan jumlah susu',
-                  prefixIcon: Icon(Icons.liquor),
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {

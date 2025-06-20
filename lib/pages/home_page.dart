@@ -21,8 +21,8 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-    _refreshRecords();
     _calculateCurrentWeek();
+    _refreshRecords();
   }
 
   void _calculateCurrentWeek() {
@@ -35,7 +35,7 @@ class _HomePageState extends State<HomePage> {
     setState(() {
       _milkRecordsFuture = _supabaseService.getMilkRecords();
     });
-    _updateTotalMilkPerWeek();
+    await _updateTotalMilkPerWeek();
   }
 
   Future<void> _updateTotalMilkPerWeek() async {
@@ -50,52 +50,98 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> _deleteRecord(String id) async {
     await _supabaseService.deleteMilkRecord(id);
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('Catatan berhasil dihapus!')));
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Catatan berhasil dihapus!')),
+      );
+    }
     _refreshRecords();
   }
 
   String _formatDate(DateTime date) {
-    return DateFormat('dd MMM yyyy').format(date);
+    return DateFormat('dd MMMEEEE').format(date);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Catatan Setoran Susu')),
+      appBar: AppBar(
+        title: const Text(
+          'Catatan Susu Sapi',
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        backgroundColor: Colors.green,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () {},
+        ),
+      ),
       body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: Card(
+              elevation: 4,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'Ringkasan Mingguan (${_formatDate(_currentWeekStart)} - ${_formatDate(_currentWeekEnd)})',
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF3B82F6),
-                      ),
+                    const Row(
+                      children: [
+                        Icon(Icons.calendar_today, color: Colors.green),
+                        SizedBox(width: 8),
+                        Text(
+                          'Ringkasan Mingguan',
+                          style: TextStyle(
+                              fontSize: 18, fontWeight: FontWeight.bold),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Total Susu Minggu Ini: ${_totalMilkPerWeek.toStringAsFixed(2)} Liter',
-                      style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF1F2937),
-                      ),
+                      'Periode: ${DateFormat('dd MMM yyyy').format(_currentWeekStart)} - ${DateFormat('dd MMM yyyy').format(_currentWeekEnd)}',
+                      style: const TextStyle(fontSize: 14, color: Colors.grey),
+                    ),
+                    const Divider(height: 20, thickness: 1),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Total Susu Minggu Ini:',
+                          style: TextStyle(fontSize: 16),
+                        ),
+                        Text(
+                          '${_totalMilkPerWeek.toStringAsFixed(2)} Liter',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.green[700],
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
               ),
             ),
           ),
+          const SizedBox(height: 20),
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16.0),
+            child: Text(
+              'Daftar Catatan Susu:',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+          ),
+          const SizedBox(height: 10),
           Expanded(
             child: FutureBuilder<List<MilkRecord>>(
               future: _milkRecordsFuture,
@@ -113,86 +159,105 @@ class _HomePageState extends State<HomePage> {
                     itemCount: snapshot.data!.length,
                     itemBuilder: (context, index) {
                       final record = snapshot.data![index];
-                      return Card(
-                        margin: const EdgeInsets.symmetric(
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(
                           horizontal: 16.0,
                           vertical: 8.0,
                         ),
-                        child: ListTile(
-                          contentPadding: const EdgeInsets.all(16.0),
-                          title: Text(
-                            '${record.farmerName} - ${_formatDate(record.setorDate)}',
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                              color: Color(0xFF1F2937),
-                            ),
+                        child: Card(
+                          elevation: 2,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
                           ),
-                          subtitle: Text(
-                            'Jumlah Susu: ${record.milkQuantity.toStringAsFixed(2)} Liter',
-                            style: const TextStyle(
-                              fontSize: 14,
-                              color: Color(0xFF4B5563),
-                            ),
-                          ),
-                          trailing: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              IconButton(
-                                icon: const Icon(
-                                  Icons.edit,
-                                  color: Color(0xFF60A5FA),
-                                ), // blue-400
-                                onPressed: () async {
-                                  await Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder:
-                                          (context) =>
-                                              AddEditRecordPage(record: record),
-                                    ),
-                                  );
-                                  _refreshRecords();
-                                },
-                              ),
-                              IconButton(
-                                icon: const Icon(
-                                  Icons.delete,
-                                  color: Color(0xFFEF4444),
-                                ), // red-500
-                                onPressed: () {
-                                  showDialog(
-                                    context: context,
-                                    builder:
-                                        (context) => AlertDialog(
-                                          title: const Text('Hapus Catatan'),
-                                          content: const Text(
-                                            'Apakah Anda yakin ingin menghapus catatan ini?',
+                          child: Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Row(
+                              children: [
+                                CircleAvatar(
+                                  backgroundColor: Colors.green[100],
+                                  child: const Icon(Icons.person,
+                                      color: Colors.green),
+                                ),
+                                const SizedBox(width: 16),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        record.farmerName,
+                                        style: const TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        'Tanggal: ${_formatDate(record.setorDate)}',
+                                        style: const TextStyle(
+                                            fontSize: 14, color: Colors.grey),
+                                      ),
+                                      Text(
+                                        'Jumlah Susu: ${record.milkQuantity.toStringAsFixed(2)} Liter',
+                                        style: const TextStyle(
+                                            fontSize: 14, color: Colors.grey),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    IconButton(
+                                      icon: const Icon(Icons.edit,
+                                          color: Colors.blue),
+                                      onPressed: () async {
+                                        await Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) =>
+                                                AddEditRecordPage(
+                                                    record: record),
                                           ),
-                                          actions: [
-                                            TextButton(
-                                              onPressed:
-                                                  () => Navigator.pop(context),
-                                              child: const Text('Batal'),
-                                            ),
-                                            ElevatedButton(
-                                              onPressed: () {
-                                                _deleteRecord(record.id);
-                                                Navigator.pop(context);
-                                              },
-                                              style: ElevatedButton.styleFrom(
-                                                backgroundColor: const Color(
-                                                  0xFFEF4444,
-                                                ),
+                                        );
+                                        _refreshRecords();
+                                      },
+                                    ),
+                                    IconButton(
+                                      icon: const Icon(Icons.delete,
+                                          color: Colors.red),
+                                      onPressed: () {
+                                        showDialog(
+                                          context: context,
+                                          builder: (context) => AlertDialog(
+                                            title: const Text('Hapus Catatan'),
+                                            content: const Text(
+                                                'Apakah Anda yakin ingin menghapus catatan ini?'),
+                                            actions: [
+                                              TextButton(
+                                                onPressed: () =>
+                                                    Navigator.pop(context),
+                                                child: const Text('Batal'),
                                               ),
-                                              child: const Text('Hapus'),
-                                            ),
-                                          ],
-                                        ),
-                                  );
-                                },
-                              ),
-                            ],
+                                              ElevatedButton(
+                                                onPressed: () {
+                                                  _deleteRecord(record.id);
+                                                  Navigator.pop(context);
+                                                },
+                                                style: ElevatedButton.styleFrom(
+                                                  backgroundColor: Colors.red,
+                                                  foregroundColor: Colors.white,
+                                                ),
+                                                child: const Text('Hapus'),
+                                              ),
+                                            ],
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       );
@@ -212,7 +277,8 @@ class _HomePageState extends State<HomePage> {
           );
           _refreshRecords();
         },
-        child: const Icon(Icons.add),
+        backgroundColor: Colors.green,
+        child: const Icon(Icons.add, color: Colors.white),
       ),
     );
   }

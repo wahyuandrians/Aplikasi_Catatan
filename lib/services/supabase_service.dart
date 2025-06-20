@@ -1,5 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../models/milk_record.dart'; // Pastikan path ini benar!
+import '../models/milk_record.dart';
 
 class SupabaseService {
   final SupabaseClient _supabase = Supabase.instance.client;
@@ -34,14 +34,11 @@ class SupabaseService {
 
   Future<void> updateMilkRecord(MilkRecord record) async {
     try {
-      await _supabase
-          .from('milk_records')
-          .update({
-            'setor_date': record.setorDate.toIso8601String().split('T').first,
-            'farmer_name': record.farmerName,
-            'milk_quantity': record.milkQuantity,
-          })
-          .eq('id', record.id);
+      await _supabase.from('milk_records').update({
+        'setor_date': record.setorDate.toIso8601String().split('T').first,
+        'farmer_name': record.farmerName,
+        'milk_quantity': record.milkQuantity,
+      }).eq('id', record.id);
     } catch (e) {
       print('Error updating milk record: $e');
       throw Exception('Gagal memperbarui catatan susu: $e');
