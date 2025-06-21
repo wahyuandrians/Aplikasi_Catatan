@@ -21,17 +21,17 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Aplikasi Setoran Susu',
       theme: ThemeData(
-        primarySwatch: Colors.blue,
-        primaryColor: const Color(0xFF3B82F6),
-        secondaryHeaderColor: const Color(0xFF60A5FA),
+        primarySwatch: Colors.green,
+        primaryColor: const Color(0xFF16A34A),
+        secondaryHeaderColor: const Color(0xFF4ADE80),
         scaffoldBackgroundColor: const Color(0xFFF8FAFC),
         appBarTheme: const AppBarTheme(
-          backgroundColor: Color(0xFF3B82F6),
+          backgroundColor: Color(0xFF16A34A),
           foregroundColor: Colors.white,
           elevation: 0,
         ),
         floatingActionButtonTheme: const FloatingActionButtonThemeData(
-          backgroundColor: Color(0xFF3B82F6),
+          backgroundColor: Color(0xFF16A34A),
           foregroundColor: Colors.white,
         ),
         cardTheme: CardTheme(
@@ -50,7 +50,7 @@ class MyApp extends StatelessWidget {
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8.0),
-            borderSide: const BorderSide(color: Color(0xFF3B82F6), width: 2.0),
+            borderSide: const BorderSide(color: Color(0xFF16A34A), width: 2.0),
           ),
           contentPadding: const EdgeInsets.symmetric(
             vertical: 12.0,
@@ -59,7 +59,7 @@ class MyApp extends StatelessWidget {
         ),
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF3B82F6),
+            backgroundColor: const Color(0xFF16A34A),
             foregroundColor: Colors.white,
             padding: const EdgeInsets.symmetric(
               vertical: 12.0,
@@ -72,7 +72,7 @@ class MyApp extends StatelessWidget {
           ),
         ),
         textButtonTheme: TextButtonThemeData(
-          style: TextButton.styleFrom(foregroundColor: const Color(0xFF3B82F6)),
+          style: TextButton.styleFrom(foregroundColor: const Color(0xFF16A34A)),
         ),
       ),
       home: const HomePage(),
